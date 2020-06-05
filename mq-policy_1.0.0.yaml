@@ -31,7 +31,7 @@ x-ibm-configuration:
           version: 2.0.0
           title: gatewayscript
           source: |-
-            var apim = require('apim');
+            var apim = require('apim'); //to get message.body
 
             var data = apim.getvariable('message.body');
 

@@ -259,6 +259,9 @@ exit
 Parameters defined by this assembly function call can be accessed in the different API assembly Action using the **local** object: `local.parameter.MyParam`.
 For instance the gatewayscript can access the queue parameter value using: `context.get('local.parameter.queue')`.
 
+#### OpenAPI file example
+The yaml file *mq-policy_1.0.0.yaml* can be used as example on how to use the UDP policy in a API definition.
+You can import the OpenAPI in APIC once the 
 ## Packaging the UDP
 
 ### structure
@@ -279,22 +282,31 @@ The folder *mq-invoke* contains the .cfg files (API assembly configuration and q
 
 Here are the steps that can be performed to package and publish the UDP:
 - Create the zip:
+
 `zip mq-invoke-ext.zip mq-invoke/*.cfg mq-invoke/*.js`
 - Login to the manager using the scope **admin**:
+
 `apic login --server mgmtHost --realm admin/myIdp -u myAdminUser`
 *myIdp* is the identity provider where the user *myAdminUser* is defined.
 To get the list of identity provider in the admin scope, you can use the following cli:
+
 `apic identity-providers:list --scope admin -s mgmtHost`
 - Deploy the package with the command
+
 `apic gateway-extensions:create myPackage.zip --scope org --org admin --gateway-service myGatewayService --availability-zone availabilityZoneOfGatewaySrv -s mgmtHost`
+
 The organisation has to be *admin*.
 To get the list of availability zone, the following cli can be used:
+
 `apic availability-zones:list --org admin -s $mgmt`
+
 And the list of gateway service in a particular availability zone:
+
 `apic gateway-services:list --org admin --availability-zones availabilityZoneOfGatewaySrv -s $mgmt`
 
 To redeploy your UDP (if you make a change) follow the steps:
-- delete the UDP: `apic gateway-extensions:delete --scope org --org admin --gateway-service myGatewayService --availability-zone availabilityZoneOfGatewaySrv -s mgmtHost`
+- delete the UDP: 
+`apic gateway-extensions:delete --scope org --org admin --gateway-service myGatewayService --availability-zone availabilityZoneOfGatewaySrv -s mgmtHost`
 - create the UDP
 
 The deployment takes a while to get the extension downloaded from the gateway. The API GatewayService on the DataPower has a configuration to tells the interval time to get information.
@@ -310,21 +322,6 @@ For the Manual step:
 - Disable the gw service
 - Enable the gw service
 
-This can be automated using the following the following command (can be added in the API assembly configuration file)
-
-```
-apic-gw-service
-  admin-state disabled
-exit
-
-apic-gw-service
-  admin-state enabled
-exit
-
-apic-gw-service
-  user-defined-policies udp-basic_1.0.0
-exit
-```
 In a kubernetes deployment, the configruation of the user defined policy can be automated using a config map.
 
 After this configuration, the gateway will notify the manager that a user-defined policy is available and it will then appears in the assembly. This can take one to a couple of minutes.
