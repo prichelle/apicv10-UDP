@@ -1,0 +1,69 @@
+swagger: '2.0'
+info:
+  title: mq-policy
+  x-ibm-name: mq-policy
+  version: 1.0.0
+schemes:
+  - https
+basePath: /mq-policy
+produces:
+  - application/json
+consumes:
+  - application/json
+security:
+  - clientID: []
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - gatewayscript:
+          version: 2.0.0
+          title: gatewayscript
+          source: |-
+            var apim = require('apim');
+
+            var data = apim.getvariable('message.body');
+
+            console.error ("body: " + data);
+
+            context.set('mqmsgdata',JSON.stringify(data));
+  properties:
+    target-url:
+      value: 'http://example.com/operation-name'
+      description: The URL of the target service
+      encoded: false
+  application-authentication:
+    certificate: false
+  activity-log:
+    enabled: true
+    error-content: header
+    success-content: activity
+paths:
+  /send:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: body
+          in: body
+          required: false
+          schema:
+            type: object
+      consumes:
+        - application/json
+      produces:
+        - application/json
