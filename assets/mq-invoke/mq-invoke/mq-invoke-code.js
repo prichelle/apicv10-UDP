@@ -63,7 +63,7 @@ function process(options) {
 
 
 
-var qmgr = context.get('local.parameter.qmgrObj')
+var qmgr = context.get('local.parameter.qmgrObj');
 var varResponse = context.get('local.parameter.varOutputName');
 var varMqMsgData = context.get('local.parameter.variableName');
 var reqq = context.get('local.parameter.queue');

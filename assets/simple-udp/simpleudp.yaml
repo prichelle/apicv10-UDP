@@ -1,0 +1,50 @@
+policy: 1.0.0
+info:
+  title: Simple UDP
+  name: udpsimpleudp
+  version: 1.0.0
+  description: policy to demonstrate the use of a simple UDP
+  contact: 
+    name: richelle
+    url: 'https://github.com/ibm-datapower/'
+    email: pierre.richelle@be.ibm.com
+attach:
+  - rest
+  - soap
+gateways:
+  - datapower-api-gateway
+properties:
+  $schema: "http://json-schema.org/draft-04/schema#"
+  type: object
+  properties:
+    myProperty:
+      label: a property label
+      description: a property to write in console
+      type: string
+  required:
+    - myProperty
+assembly:
+  execute:
+    - gatewayscript:
+        version: 2.0.0
+        title: udp-simple-udp-gws
+        source: |-
+          var address = context.get("local.parameter.myProperty");
+          console.error("*** prop from GWS: " + address);
+    - xslt:
+        version: 2.0.0
+        title: upd-simple-udp-xslt
+        input: false
+        source: >-
+          <xsl:stylesheet version="1.0"
+            xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+            xmlns:dp="http://www.datapower.com/extensions" 
+            xmlns:apigw="http://www.ibm.com/xmlns/datapower/2017/11/apigateway"
+            extension-element-prefixes="dp apigw">         
+            <xsl:template match="/">
+              <xsl:variable name="myProp" select="apigw:get-variable('local.parameter.myProperty')"/>
+              <xsl:message dp:priority="error">****  prop from xslt <xsl:value-of select="$myProp" /></xsl:message>
+              <apigw:set-variable name="'xsloutput'" value="'output from xslt'" />
+            </xsl:template>
+          </xsl:stylesheet>
+ 

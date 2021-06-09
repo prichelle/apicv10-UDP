@@ -1,0 +1,14 @@
+{
+    "extension": {
+        "properties": { 
+          "deploy-policy-emulator": false
+          },
+        "files": [
+            {
+                "filename":"mq-invoke-policy.zip",
+                "deploy": "immediate",
+                "type": "extension"
+            }
+        ]
+    }
+}

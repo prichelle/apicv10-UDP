@@ -1,0 +1,101 @@
+policy: 1.0.0
+info:
+  title: LDAP search
+  name: udpldapsearch
+  version: 1.0.0
+  description: policy to demonstrate the use of a simple UDP
+  contact: 
+    name: richelle
+    url: 'https://github.com/prichelle/apic-udp'
+    email: pierre.richelle@be.ibm.com
+attach:
+  - rest
+  - soap
+gateways:
+  - datapower-api-gateway
+properties:
+  $schema: "http://json-schema.org/draft-04/schema#"
+  type: object
+  properties:
+    serverAddress:
+      label: Host
+      description: ldap host
+      type: string
+    portNumber:
+      label: Port
+      description: ldap port
+      type: string
+    bindDN:
+      label: User DN
+      description: user used to bind for the ldap search
+      type: string
+    bindPassword:
+      label: User password
+      description: user DN password
+      type: string
+    targetBaseDN:
+      label: Base DN
+      description: base DN used for the search
+      type: string
+    attributeName:
+      label: ldap attributes
+      description: attributes to return (SN,cn,mail)
+      type: string
+  required:
+    - serverAddress
+    - portNumber
+    - bindDN
+    - bindPassword
+    - targetBaseDN
+    - attributeName
+assembly:
+  execute:
+    - xslt:
+        version: 2.0.0
+        title: upd-simple-udp-xslt
+        input: false
+        source: >-
+          <xsl:stylesheet version="1.0"
+            xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+            xmlns:dp="http://www.datapower.com/extensions" 
+            xmlns:apigw="http://www.ibm.com/xmlns/datapower/2017/11/apigateway"
+            extension-element-prefixes="dp apigw">         
+            <xsl:template match="/">
+              <xsl:variable name="serverAddress" select="apigw:get-variable('local.parameter.serverAddress')"/>
+              <xsl:variable name="portNumber" select="apigw:get-variable('local.parameter.portNumber')"/>
+              <xsl:variable name="bindDN" select="apigw:get-variable('local.parameter.bindDN')"/>
+              <xsl:variable name="bindPassword" select="apigw:get-variable('local.parameter.bindPassword')"/>
+              <xsl:variable name="targetBaseDN" select="apigw:get-variable('local.parameter.targetBaseDN')"/>
+              <xsl:variable name="attributeName" select="apigw:get-variable('local.parameter.attributeName')"/>
+              <xsl:variable name="filter" select="apigw:get-variable('ldapsearchfilter')"/>
+              <!-- concat('(|(uid=',$username,')(&amp;(objectClass=groupOfUniqueNames)(uniqueMember=uid=',$username, ',ou=users,dc=ibm,dc=com)))') -->
+              <xsl:variable name="sslProxyProfile" select="''"/>
+              <xsl:variable name="ldapLBGroup" select="''"/>
+              <xsl:variable name="ldapResults" select="dp:ldap-search($serverAddress, $portNumber, $bindDN, $bindPassword, $targetBaseDN, $attributeName, $filter, 'sub', $sslProxyProfile, $ldapLBGroup, 'v3')"/>
+              <xsl:variable name="parseResult">
+                <xsl:text>[</xsl:text>
+                <xsl:for-each select="$ldapResults//result">
+                  <xsl:if test="position() = 1">
+                    <xsl:text>{"DN":"</xsl:text>
+                  </xsl:if>
+                  <xsl:if test="position() != 1">
+                    <xsl:text>,{"DN":"</xsl:text>
+                  </xsl:if>
+                  <xsl:value-of select="./DN" />
+                  <xsl:text>"</xsl:text>
+                  <xsl:for-each select="./attribute-value">
+                      <xsl:text>,"</xsl:text>
+                      <xsl:value-of select="./@name"/>
+                      <xsl:text>":"</xsl:text>
+                      <xsl:value-of select="."/>
+                      <xsl:text>"</xsl:text>
+                  </xsl:for-each>
+                  <xsl:text>}</xsl:text>
+                </xsl:for-each>
+                <xsl:text>]</xsl:text>
+              </xsl:variable>
+              <xsl:message dp:priority="error">***** Result: <xsl:copy-of select="$parseResult" /></xsl:message>
+              <xsl:message dp:priority="error">****  <xsl:value-of select="$username" /> for <xsl:value-of select="$group" /></xsl:message>
+              <apigw:set-variable name="'ldapsearch'" value="$parseResult" />
+            </xsl:template>
+          </xsl:stylesheet>
